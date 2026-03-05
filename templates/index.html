@@ -191,6 +191,21 @@
             <section class="py-24 bg-black text-white">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h1 class="text-5xl lg:text-6xl font-black tracking-tight mb-6">ABOUT ZAVA</h1>
+                    <!-- Dad Joke Section -->
+                    <div class="mt-8 mb-4 max-w-3xl mx-auto">
+                        <div class="bg-gray-900 border-2 border-yellow-400 rounded-lg p-6 shadow-2xl">
+                            <div class="flex items-center justify-center mb-3">
+                                <span class="text-3xl mr-2">😄</span>
+                                <h2 class="text-lg font-bold text-yellow-400 tracking-wide">DAD JOKE OF THE MOMENT</h2>
+                            </div>
+                            <p id="dadJokeText" class="text-lg text-gray-200 italic leading-relaxed">
+                                Loading joke...
+                            </p>
+                            <button onclick="refreshDadJoke()" class="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-300 transition-colors text-sm">
+                                GET NEW JOKE
+                            </button>
+                        </div>
+                    </div>
                     <p class="text-xl text-gray-300 max-w-2xl mx-auto">Admin platform for managing your e-commerce operations</p>
                 </div>
             </section>
@@ -562,6 +577,11 @@
                 loadSalesSummary(1);
             }
             
+            // Load dad joke if navigating to about page
+            if (pageName === 'about') {
+                loadDadJoke();
+            }
+            
             // Scroll to top
             window.scrollTo(0, 0);
         }
@@ -569,6 +589,38 @@
         function toggleMobileMenu() {
             const mobileMenu = document.getElementById('mobileMenu');
             mobileMenu.classList.toggle('hidden');
+        }
+
+        // Dad Joke Functions
+        async function loadDadJoke() {
+            const jokeElement = document.getElementById('dadJokeText');
+            if (!jokeElement) return;
+            
+            try {
+                jokeElement.textContent = 'Loading joke...';
+                const response = await fetch('/dadjoke');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch dad joke');
+                }
+                
+                const data = await response.json();
+                jokeElement.textContent = data.joke;
+                
+                // Add a subtle animation
+                jokeElement.style.animation = 'none';
+                setTimeout(() => {
+                    jokeElement.style.animation = 'fadeIn 0.5s ease-in';
+                }, 10);
+                
+            } catch (error) {
+                console.error('Error loading dad joke:', error);
+                jokeElement.textContent = 'Oops! Failed to load joke. Try again later.';
+            }
+        }
+
+        async function refreshDadJoke() {
+            await loadDadJoke();
         }
 
         // Contact Form Handler
