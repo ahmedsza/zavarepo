@@ -6,6 +6,7 @@ import math
 import time
 import logging
 import pyodbc
+import requests
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -34,6 +35,12 @@ def get_connection():
 
 # In-memory product store
 data = {}
+
+# Dad joke cache
+dad_joke_cache = {
+    'joke': None,
+    'timestamp': 0
+}
 
 @app.route('/')
 def index():
@@ -136,6 +143,53 @@ def get_customer_sales_summary():
     except Exception as exc:
         logger.error("Error in customer-sales-summary: %s", str(exc))
         return jsonify({"error": str(exc)}), 500
+
+
+@app.route('/dadjoke', methods=['GET'])
+def get_dad_joke():
+    """Fetch a dad joke with 5-second caching."""
+    try:
+        current_time = time.time()
+        cache_duration = 5  # 5 seconds
+        
+        # Check if cache is still valid
+        if dad_joke_cache['joke'] and (current_time - dad_joke_cache['timestamp']) < cache_duration:
+            logger.info("Returning cached dad joke")
+            return jsonify({
+                'joke': dad_joke_cache['joke'],
+                'cached': True
+            }), 200
+        
+        # Fetch new joke from API
+        logger.info("Fetching new dad joke from API")
+        response = requests.get(
+            'https://icanhazdadjoke.com/',
+            headers={'Accept': 'application/json'},
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            joke_data = response.json()
+            joke_text = joke_data.get('joke', 'No joke available')
+            
+            # Update cache
+            dad_joke_cache['joke'] = joke_text
+            dad_joke_cache['timestamp'] = current_time
+            
+            return jsonify({
+                'joke': joke_text,
+                'cached': False
+            }), 200
+        else:
+            logger.error(f"Failed to fetch dad joke: {response.status_code}")
+            return jsonify({'error': 'Failed to fetch dad joke'}), 500
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request error fetching dad joke: {str(e)}")
+        return jsonify({'error': 'Failed to fetch dad joke'}), 500
+    except Exception as e:
+        logger.error(f"Error in dad joke endpoint: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
