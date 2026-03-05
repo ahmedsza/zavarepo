@@ -449,12 +449,66 @@
 
     <!-- Contact Us Page -->
     <div id="contactPage" class="page-section">
-        <section class="min-h-screen bg-white flex items-center justify-center">
-            <div class="text-center px-4">
-                <div class="text-8xl mb-8">💬</div>
-                <h2 class="text-4xl font-black tracking-tight text-black mb-4">CONTACT US</h2>
-                <p class="text-2xl text-gray-400 mb-4">COMING SOON</p>
-                <p class="text-gray-600 max-w-md mx-auto">We're setting up our contact channels to serve you better.</p>
+        <section class="py-24 bg-black text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-5xl lg:text-6xl font-black tracking-tight mb-6">CONTACT US</h1>
+                <p class="text-xl text-gray-300 max-w-2xl mx-auto">Have a question or feedback? We'd love to hear from you.</p>
+            </div>
+        </section>
+
+        <section class="py-20 bg-white">
+            <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div id="contactSuccess" class="hidden mb-8 p-4 bg-green-50 border border-green-200 text-green-800 text-center font-semibold">
+                    Thank you! Your message has been submitted.
+                </div>
+                <div id="contactError" class="hidden mb-8 p-4 bg-red-50 border border-red-200 text-red-800 text-center font-semibold"></div>
+                <form id="contactForm" onsubmit="handleContactSubmit(event)" novalidate class="space-y-6">
+                    <div>
+                        <label for="contactName" class="block text-sm font-bold tracking-wider text-black mb-2">NAME</label>
+                        <input
+                            id="contactName"
+                            type="text"
+                            placeholder="Your name"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none text-sm"
+                            aria-label="Your name"
+                        >
+                    </div>
+                    <div>
+                        <label for="contactCategory" class="block text-sm font-bold tracking-wider text-black mb-2">CATEGORY</label>
+                        <select
+                            id="contactCategory"
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none text-sm bg-white"
+                            aria-label="Category"
+                        >
+                            <option value="" disabled selected>Select a category</option>
+                            <option value="General Enquiry">General Enquiry</option>
+                            <option value="Product Support">Product Support</option>
+                            <option value="Order Issue">Order Issue</option>
+                            <option value="Billing">Billing</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="contactMessage" class="block text-sm font-bold tracking-wider text-black mb-2">MESSAGE</label>
+                        <textarea
+                            id="contactMessage"
+                            rows="6"
+                            placeholder="Write your message here..."
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none text-sm resize-none"
+                            aria-label="Message"
+                        ></textarea>
+                    </div>
+                    <button
+                        type="submit"
+                        id="contactSubmitBtn"
+                        class="w-full px-10 py-4 bg-black text-white font-semibold hover:bg-gray-800 transition-all duration-300 text-sm tracking-wider"
+                    >
+                        SUBMIT
+                    </button>
+                </form>
             </div>
         </section>
     </div>
@@ -1035,6 +1089,53 @@
             const email = event.target.querySelector('input[type="email"]').value;
             showAlert(`Thank you for subscribing with ${email}! You'll receive our latest updates.`);
             event.target.reset();
+        }
+
+        // Contact form — calls SubmitFeedback API
+        async function SubmitFeedback(name, category, message) {
+            const response = await fetch('/submit-feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, category, message })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to submit feedback');
+            }
+            return response.json();
+        }
+
+        async function handleContactSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('contactName').value.trim();
+            const category = document.getElementById('contactCategory').value;
+            const message = document.getElementById('contactMessage').value.trim();
+            const successEl = document.getElementById('contactSuccess');
+            const errorEl = document.getElementById('contactError');
+            const submitBtn = document.getElementById('contactSubmitBtn');
+
+            successEl.classList.add('hidden');
+            errorEl.classList.add('hidden');
+
+            if (!name || !category || !message) {
+                errorEl.textContent = 'Please fill in all fields before submitting.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'SUBMITTING...';
+
+            try {
+                await SubmitFeedback(name, category, message);
+                document.getElementById('contactForm').reset();
+                successEl.classList.remove('hidden');
+            } catch (err) {
+                errorEl.textContent = 'Something went wrong. Please try again.';
+                errorEl.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'SUBMIT';
+            }
         }
     </script>
 </body>
