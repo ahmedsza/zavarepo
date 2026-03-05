@@ -102,6 +102,25 @@ def delete_product(product_id):
     return '', 204
 
 
+@app.route('/submit-feedback', methods=['POST'])
+def submit_feedback():
+    body = request.get_json()
+    if not body:
+        abort(400)
+    name = body.get('name', '').strip()
+    category = body.get('category', '').strip()
+    message = body.get('message', '').strip()
+    if not name or not category or not message:
+        abort(400)
+    logger.info(
+        "SubmitFeedback — name=%s, category=%s, message=%s",
+        name,
+        category,
+        message,
+    )
+    return jsonify({"status": "success"}), 200
+
+
 @app.route('/customer-sales-summary', methods=['GET'])
 def get_customer_sales_summary():
     """
